@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- SEO Meta -->
+    <title>EduCouns AI — Platform Konseling & Kesehatan Mental Pelajar Indonesia</title>
+    <meta name="description" content="EduCouns AI adalah platform e-counseling berbasis kecerdasan buatan untuk pelajar Indonesia. Asesmen psikologis PHQ-9/GAD-7, mood tracking, AI chat konselor, dan forum dukungan sesama pelajar." />
+    <meta name="keywords" content="konseling online, kesehatan mental pelajar, AI konselor, BK sekolah, asesmen psikologi remaja" />
+    <meta name="author" content="EduCouns AI Team" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://educouns.ai/" />
+    <meta property="og:title" content="EduCouns AI — Platform Konseling Pelajar" />
+    <meta property="og:description" content="Konseling berbasis AI, asesmen psikologis, dan mood tracking untuk pelajar Indonesia." />
+    <meta property="og:image" content="/og-image.png" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="EduCouns AI — Platform Konseling Pelajar" />
+    <meta name="twitter:description" content="Konseling berbasis AI untuk pelajar Indonesia." />
+    <meta name="twitter:image" content="/og-image.png" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#6366f1" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#4f46e5" media="(prefers-color-scheme: dark)" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="EduCouns AI" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
+
+    <!-- Preconnect fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+      const isDevHost =
+        location.hostname === 'localhost' ||
+        location.hostname === '127.0.0.1' ||
+        location.hostname === '[::1]';
+
+      if ('serviceWorker' in navigator && !isDevHost) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker
+            .register('/sw.js', { scope: '/' })
+            .then((reg) => {
+              console.log('[EduCouns AI] Service Worker registered:', reg.scope);
+
+              // Handle updates
+              reg.addEventListener('updatefound', () => {
+                const newWorker = reg.installing;
+                if (newWorker) {
+                  newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                      console.log('[EduCouns AI] New version available — refresh to update.');
+                    }
+                  });
+                }
+              });
+            })
+            .catch((err) => console.warn('[EduCouns AI] SW registration failed:', err));
+        });
+      } else if ('serviceWorker' in navigator && isDevHost) {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          registrations.forEach((registration) => registration.unregister());
+        });
+      }
+    </script>
+  </body>
+</html>

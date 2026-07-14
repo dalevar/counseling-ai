@@ -1,0 +1,207 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "EduCouns AI Backend API",
+    "version": "1.0.0",
+    "description": "API Documentation for EduCouns AI Platform"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000",
+      "description": "Development Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/v1/auth/register": {
+      "post": {
+        "summary": "Register a new user",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password", "role", "firstName", "lastName"],
+                "properties": {
+                  "email": { "type": "string", "format": "email", "example": "student.test@educouns.ai" },
+                  "password": { "type": "string", "example": "Password123" },
+                  "role": { "type": "string", "enum": ["ADMIN", "STUDENT", "COUNSELOR", "TEACHER", "PARENT"], "example": "STUDENT" },
+                  "firstName": { "type": "string", "example": "John" },
+                  "lastName": { "type": "string", "example": "Doe" },
+                  "phone": { "type": "string", "example": "08123456789" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Registrasi berhasil. Silakan cek email Anda untuk kode OTP verifikasi." },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "userId": { "type": "string", "example": "user-uuid" },
+                        "email": { "type": "string", "example": "student.test@educouns.ai" },
+                        "role": { "type": "string", "example": "STUDENT" },
+                        "status": { "type": "string", "example": "PENDING" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/verify-otp": {
+      "post": {
+        "summary": "Verify email using OTP code",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "code", "purpose"],
+                "properties": {
+                  "email": { "type": "string", "format": "email", "example": "student.test@educouns.ai" },
+                  "code": { "type": "string", "example": "123456" },
+                  "purpose": { "type": "string", "example": "VERIFICATION" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Verified successfully" }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "summary": "Login and get tokens",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "example": "student.test@educouns.ai" },
+                  "password": { "type": "string", "example": "Password123" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login successful" }
+        }
+      }
+    },
+    "/api/v1/users/me": {
+      "get": {
+        "summary": "Get logged-in user profile detail",
+        "tags": ["Users"],
+        "responses": {
+          "200": {
+            "description": "Profile details retrieved successfully"
+          }
+        }
+      }
+    },
+    "/api/v1/users/me/avatar": {
+      "post": {
+        "summary": "Upload avatar image",
+        "tags": ["Users"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "avatar": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Avatar updated successfully" }
+        }
+      }
+    },
+    "/api/v1/users/me/student": {
+      "put": {
+        "summary": "Update student profile",
+        "tags": ["Users"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "firstName": { "type": "string", "example": "John" },
+                  "lastName": { "type": "string", "example": "Doe" },
+                  "phone": { "type": "string", "example": "0812" },
+                  "gender": { "type": "string", "enum": ["MALE", "FEMALE"], "example": "MALE" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Student profile updated" }
+        }
+      }
+    },
+    "/api/v1/users/admin/users": {
+      "get": {
+        "summary": "Admin: List all users with search, pagination, and sorting",
+        "tags": ["Admin User Management"],
+        "parameters": [
+          { "name": "role", "in": "query", "schema": { "type": "string", "enum": ["STUDENT", "COUNSELOR", "TEACHER", "PARENT"] } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } },
+          { "name": "sortBy", "in": "query", "schema": { "type": "string", "default": "createdAt" } },
+          { "name": "sortOrder", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"], "default": "desc" } }
+        ],
+        "responses": {
+          "200": { "description": "Success retrieving lists" }
+        }
+      }
+    }
+  }
+}

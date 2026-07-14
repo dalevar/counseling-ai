@@ -1,0 +1,618 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+enum RoleName {
+  ADMIN
+  STUDENT
+  COUNSELOR
+  TEACHER
+  PARENT
+}
+
+enum OtpPurpose {
+  VERIFICATION
+  PASSWORD_RESET
+}
+
+enum SessionStatus {
+  PENDING
+  APPROVED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum SessionType {
+  ONLINE
+  OFFLINE
+}
+
+enum RecommendationType {
+  ARTICLE
+  EXERCISE
+  COPING
+}
+
+enum Semester {
+  ODD
+  EVEN
+}
+
+enum ReportStatus {
+  PENDING
+  RESOLVED
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+}
+
+// User model
+model User {
+  id               String          @id @default(uuid())
+  email            String          @unique
+  passwordHash     String
+  isEmailVerified  Boolean         @default(false)
+  status           UserStatus      @default(PENDING)
+  roleId           String
+  role             Role            @relation(fields: [roleId], references: [id])
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  student          Student?
+  counselor        Counselor?
+  teacher          Teacher?
+  parent           Parent?
+  
+  refreshTokens    RefreshToken[]
+  passwordResets   PasswordReset[]
+  notifications    Notification[]
+  activityLogs     ActivityLog[]
+  auditLogs        AuditLog[]
+  files            File[]
+  settings         Settings[]
+  forums           Forum[]
+  comments         Comment[]
+  likes            Like[]
+  reportsFiled     Report[]        @relation("Reporter")
+  reportsAgainst   Report[]        @relation("ReportedUser")
+  articles         Article[]
+  counselingMessages CounselingMessage[]
+  aiConversations       AIConversation[]
+  mentalHealthAssessments MentalHealthAssessment[]
+}
+
+// Role and Permission
+model Role {
+  id          String       @id @default(uuid())
+  name        RoleName     @unique
+  description String?
+  permissions Permission[]
+  users       User[]
+}
+
+model Permission {
+  id          String  @id @default(uuid())
+  name        String  @unique // e.g. "counseling:create", "counseling:read"
+  description String?
+  roles       Role[]
+}
+
+// Student Profile
+model Student {
+  id               String              @id // matches User.id
+  user             User                @relation(fields: [id], references: [id], onDelete: Cascade)
+  firstName        String
+  lastName         String
+  phone            String?
+  birthDate        DateTime?
+  gender           String?
+  parentId         String?
+  parent           Parent?             @relation(fields: [parentId], references: [id])
+  schoolId         String?
+  school           School?             @relation(fields: [schoolId], references: [id])
+  classId          String?
+  class            Class?              @relation(fields: [classId], references: [id])
+  academicId       String?
+  academic         Academic?           @relation(fields: [academicId], references: [id])
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  counselingSessions SessionCounseling[] @relation("StudentSessions")
+  moods             MoodTracking[]
+  journals          Journal[]
+  answers           Answer[]
+  recommendations   Recommendation[]
+  achievements      StudentAchievement[]
+  mentalHistory     MentalHistory?
+}
+
+// Parent Profile
+model Parent {
+  id        String    @id // matches User.id
+  user      User      @relation(fields: [id], references: [id], onDelete: Cascade)
+  firstName String
+  lastName  String
+  phone     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  students  Student[]
+}
+
+// Counselor Profile
+model Counselor {
+  id            String              @id // matches User.id
+  user          User                @relation(fields: [id], references: [id], onDelete: Cascade)
+  firstName     String
+  lastName      String
+  phone         String?
+  specialization String?
+  licenseNumber String?
+  bio           String?
+  rating        Float               @default(0.0)
+  isAvailable   Boolean             @default(true)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  sessions      SessionCounseling[] @relation("CounselorSessions")
+}
+
+// Teacher Profile
+model Teacher {
+  id            String              @id // matches User.id
+  user          User                @relation(fields: [id], references: [id], onDelete: Cascade)
+  firstName     String
+  lastName      String
+  employeeId    String?
+  schoolId      String?
+  school        School?             @relation(fields: [schoolId], references: [id])
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  sessions      SessionCounseling[] @relation("TeacherSessions")
+}
+
+// School
+model School {
+  id        String    @id @default(uuid())
+  name      String
+  address   String?
+  phone     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  classes   Class[]
+  students  Student[]
+  teachers  Teacher[]
+  emergencyContacts EmergencyContact[]
+}
+
+// Class
+model Class {
+  id        String    @id @default(uuid())
+  name      String
+  schoolId  String
+  school    School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  students  Student[]
+}
+
+// Academic Year / Semester
+model Academic {
+  id        String    @id @default(uuid())
+  year      String // e.g. "2025/2026"
+  semester  Semester
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  students  Student[]
+}
+
+// Assessment Type
+model Assessment {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  type        String     @unique // e.g. "PHQ_9", "GAD_7", "DASS_21"
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  questions   Question[]
+  answers     Answer[]
+}
+
+// Questions in Assessment
+model Question {
+  id           String     @id @default(uuid())
+  text         String
+  optionsJson  String // JSON string representing options & points
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+// Assessment Answers
+model Answer {
+  id                  String     @id @default(uuid())
+  studentId           String
+  student             Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  assessmentId        String
+  assessment          Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  answersJson         String // detailed answers from student
+  score               Int
+  resultInterpretation String
+  aiSummary           String?
+  createdAt           DateTime   @default(now())
+}
+
+// Session Counseling
+model SessionCounseling {
+  id            String        @id @default(uuid())
+  studentId     String
+  student       Student       @relation("StudentSessions", fields: [studentId], references: [id], onDelete: Cascade)
+  counselorId   String?
+  counselor     Counselor?    @relation("CounselorSessions", fields: [counselorId], references: [id])
+  teacherId     String?
+  teacher       Teacher?      @relation("TeacherSessions", fields: [teacherId], references: [id])
+  date          DateTime
+  timeSlot      String
+  status        SessionStatus @default(PENDING)
+  type          SessionType   @default(ONLINE)
+  meetingLink   String?
+  notes         String?
+  rating        Int?
+  feedback      String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  attachments   Attachment[]
+  messages      CounselingMessage[]
+}
+
+enum MessageSender {
+  USER
+  AI
+}
+
+// AI Conversation thread between a user and the AI counselor
+model AIConversation {
+  id        String      @id @default(uuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String      @default("Percakapan Baru")
+  summary   String?
+  isActive  Boolean     @default(true)
+  messages  AIMessage[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@index([userId])
+}
+
+// Individual message in an AI conversation
+model AIMessage {
+  id             String         @id @default(uuid())
+  conversationId String
+  conversation   AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         MessageSender
+  content        String         @db.Text
+  emotion        String?
+  sentiment      String?
+  riskLevel      String?        @default("none")
+  metadata       Json           @default("{}")
+  createdAt      DateTime       @default(now())
+
+  @@index([conversationId])
+}
+
+// Mental History
+model MentalHistory {
+  id               String   @id @default(uuid())
+  studentId        String   @unique
+  student          Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  conditionSummary String
+  updatedAt        DateTime @updatedAt
+}
+
+// Mood Tracking
+model MoodTracking {
+  id               String   @id @default(uuid())
+  studentId        String
+  student          Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  moodScore        Int // 1 to 5
+  notes            String?
+  emotionDetected  String?
+  createdAt        DateTime @default(now())
+}
+
+// Journal Entry
+model Journal {
+  id             String       @id @default(uuid())
+  studentId      String
+  student        Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  title          String
+  content        String
+  sentiment      String?
+  isPrivate      Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  attachments    Attachment[]
+}
+
+// Recommendation
+model Recommendation {
+  id        String             @id @default(uuid())
+  studentId String
+  student   Student            @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  title     String
+  content   String
+  type      RecommendationType @default(COPING)
+  isRead    Boolean            @default(false)
+  createdAt DateTime           @default(now())
+}
+
+// Notification
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  content   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+// Achievement
+model Achievement {
+  id          String               @id @default(uuid())
+  name        String               @unique
+  description String
+  badgeUrl    String
+  students    StudentAchievement[]
+}
+
+// Student & Achievement many-to-many join
+model StudentAchievement {
+  id            String      @id @default(uuid())
+  studentId     String
+  student       Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  achievementId String
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  earnedAt      DateTime    @default(now())
+
+  @@unique([studentId, achievementId])
+}
+
+// Forum Post
+model Forum {
+  id         String    @id @default(uuid())
+  title      String
+  content    String
+  authorId   String
+  author     User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  categoryId String
+  category   Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  comments   Comment[]
+  likes      Like[]
+  reports    Report[]
+}
+
+// Forum Comments
+model Comment {
+  id        String   @id @default(uuid())
+  forumId   String
+  forum     Forum    @relation(fields: [forumId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime @default(now())
+}
+
+// Forum Likes
+model Like {
+  id        String   @id @default(uuid())
+  forumId   String
+  forum     Forum    @relation(fields: [forumId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([forumId, userId])
+}
+
+// Abuse Report
+model Report {
+  id             String       @id @default(uuid())
+  reporterId     String
+  reporter       User         @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedUserId String?
+  reportedUser   User?        @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: Cascade)
+  forumId        String?
+  forum          Forum?       @relation(fields: [forumId], references: [id], onDelete: Cascade)
+  reason         String
+  status         ReportStatus @default(PENDING)
+  createdAt      DateTime     @default(now())
+}
+
+// Attachment
+model Attachment {
+  id        String             @id @default(uuid())
+  fileUrl   String
+  fileType  String
+  size      Int
+  sessionId String?
+  session   SessionCounseling? @relation(fields: [sessionId], references: [id])
+  journalId String?
+  journal   Journal?           @relation(fields: [journalId], references: [id])
+  articleId String?
+  article   Article?           @relation(fields: [articleId], references: [id])
+  createdAt DateTime           @default(now())
+}
+
+// Article
+model Article {
+  id         String        @id @default(uuid())
+  title      String
+  content    String
+  authorId   String
+  author     User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  categoryId String
+  category   Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  views      Int           @default(0)
+  status     ArticleStatus @default(DRAFT)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  attachments Attachment[]
+}
+
+// Article / Forum Category
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  forums      Forum[]
+  articles    Article[]
+}
+
+// Emergency Contact
+model EmergencyContact {
+  id        String   @id @default(uuid())
+  name      String
+  relation  String?
+  phone     String
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+// Activity Log
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String // e.g. "LOGIN", "SUBMIT_ASSESSMENT"
+  details   String?
+  createdAt DateTime @default(now())
+}
+
+// Refresh Token
+model RefreshToken {
+  id          String    @id @default(uuid())
+  token       String    @unique
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  replacedBy  String?
+  createdAt   DateTime  @default(now())
+}
+
+// OTP Code
+model OTP {
+  id        String     @id @default(uuid())
+  email     String
+  code      String
+  purpose   OtpPurpose
+  expiresAt DateTime
+  createdAt DateTime   @default(now())
+}
+
+// Password Reset Token
+model PasswordReset {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+// File Storage Registry
+model File {
+  id         String   @id @default(uuid())
+  name       String
+  url        String
+  path       String
+  mimeType   String
+  size       Int
+  uploaderId String
+  uploader   User     @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+}
+
+// Audit Log for sensitive mutations
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String // e.g. "UPDATE_USER_ROLE", "DELETE_POST"
+  tableName String
+  recordId  String
+  oldValues String? // JSON string
+  newValues String? // JSON string
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
+
+// Settings
+model Settings {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key       String
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, key])
+}
+
+// Live chat between counselor/teacher and student
+model CounselingMessage {
+  id         String            @id @default(uuid())
+  sessionId  String
+  session    SessionCounseling @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  senderId   String
+  sender     User              @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  content    String
+  createdAt  DateTime          @default(now())
+}
+
+// PHQ-9 / GAD-7 mental health self-assessment
+model MentalHealthAssessment {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type            String   // PHQ9 | GAD7
+  answers         Json
+  score           Int
+  interpretation  String
+  recommendations String[]
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+}
