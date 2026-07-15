@@ -107,13 +107,13 @@ app.get('/api', (_req: Request, res: Response) => {
       health: '/health',
       docs: '/api-docs',
 
-      auth: '/api/v1/auth',
-      users: '/api/v1/users',
-      counseling: '/api/v1/counseling',
-      ai: '/api/v1/ai',
-      journals: '/api/v1/journals',
-      notifications: '/api/v1/notifications',
-      admin: '/api/v1/admin',
+      auth: '/api/auth',
+      users: '/api/users',
+      counseling: '/api/counseling',
+      ai: '/api/ai',
+      journals: '/api/journals',
+      notifications: '/api/notifications',
+      admin: '/api/admin',
     },
   });
 });
@@ -122,21 +122,21 @@ app.get('/api', (_req: Request, res: Response) => {
    ROUTES
 ========================================================== */
 
-app.use('/api/v1/auth', authLimiter, authRouter);
+app.use('/api/auth', authLimiter, authRouter);
 
-app.use('/api/v1/users', userRouter);
+app.use('/api/users', userRouter);
 
-app.use('/api/v1/counseling', counselingRouter);
+app.use('/api/counseling', counselingRouter);
 
-app.use('/api/v1/ai/chat', aiChatLimiter);
+app.use('/api/ai/chat', aiChatLimiter);
 
-app.use('/api/v1/ai', aiRouter);
+app.use('/api/ai', aiRouter);
 
-app.use('/api/v1/journals', journalRouter);
+app.use('/api/journals', journalRouter);
 
-app.use('/api/v1/notifications', notificationRouter);
+app.use('/api/notifications', notificationRouter);
 
-app.use('/api/v1/admin', adminRouter);
+app.use('/api/admin', adminRouter);
 
 /* ==========================================================
    SWAGGER
