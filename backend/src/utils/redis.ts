@@ -4,17 +4,19 @@ import { logger } from './logger';
 
 const hasRedisUrl = Boolean(config.redis.url?.trim());
 
-export const redisClient = createClient({
+const redisClientSingleton = createClient({
   url: config.redis.url || undefined,
 });
 
-redisClient.on('error', (err) => {
+redisClientSingleton.on('error', (err) => {
   logger.error('Redis Client Error', err);
 });
 
-redisClient.on('connect', () => {
+redisClientSingleton.on('connect', () => {
   logger.info('Redis Client Connected');
 });
+
+export const redisClient = redisClientSingleton;
 
 export const connectRedis = async (): Promise<void> => {
   try {

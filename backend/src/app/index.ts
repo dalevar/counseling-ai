@@ -32,6 +32,9 @@ import { prisma } from '../utils/prisma';
 // } from '../utils/redis';
 
 const app: Application = express();
+const isVercel = Boolean(process.env.VERCEL);
+const uploadsDirectory = path.resolve(process.cwd(), 'uploads');
+const swaggerDocumentPath = path.resolve(process.cwd(), 'src/docs/swagger.json');
 
 /* ==========================================================
    REQUEST ID
@@ -78,7 +81,9 @@ app.use(
    STATIC
 ========================================================== */
 
-app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
+if (!isVercel) {
+  app.use('/uploads', express.static(uploadsDirectory));
+}
 
 /* ==========================================================
    ROOT
@@ -143,7 +148,7 @@ app.use('/api/admin', adminRouter);
 ========================================================== */
 
 app.get('/api-docs', (_req: Request, res: Response) => {
-  res.sendFile(path.join(__dirname, '../docs/swagger.json'));
+  res.sendFile(swaggerDocumentPath);
 });
 
 /* ==========================================================

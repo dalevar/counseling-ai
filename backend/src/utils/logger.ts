@@ -6,6 +6,7 @@ const logFormat = winston.format.printf(({ level, message, timestamp, stack }) =
 });
 
 const transports: winston.transport[] = [];
+const logsDirectory = path.resolve(process.cwd(), 'logs');
 
 // ===============================
 // Production (Vercel)
@@ -44,14 +45,14 @@ else {
 
   transports.push(
     new winston.transports.File({
-      filename: path.join(__dirname, '../../logs/error.log'),
+      filename: path.join(logsDirectory, 'error.log'),
       level: 'error',
     }),
   );
 
   transports.push(
     new winston.transports.File({
-      filename: path.join(__dirname, '../../logs/combined.log'),
+      filename: path.join(logsDirectory, 'combined.log'),
     }),
   );
 }

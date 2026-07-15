@@ -6,6 +6,7 @@ import { logger } from '../utils/logger';
 
 export class StorageService {
   private useCloudinary = false;
+  private uploadsDirectory = path.resolve(process.cwd(), 'uploads');
 
   constructor() {
     // Enable Cloudinary only if credentials are set and not mock
@@ -52,7 +53,7 @@ export class StorageService {
     } else {
       // Local storage fallback
       try {
-        const uploadDir = path.join(__dirname, '../../uploads', folder);
+        const uploadDir = path.join(this.uploadsDirectory, folder);
         await fs.promises.mkdir(uploadDir, { recursive: true });
 
         const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
@@ -91,7 +92,7 @@ export class StorageService {
       // Delete local file
       try {
         const localPath = publicId.replace('local:', '');
-        const filepath = path.join(__dirname, '../../uploads', localPath);
+        const filepath = path.join(this.uploadsDirectory, localPath);
         if (fs.existsSync(filepath)) {
           await fs.promises.unlink(filepath);
           logger.info(`Deleted local file: ${filepath}`);

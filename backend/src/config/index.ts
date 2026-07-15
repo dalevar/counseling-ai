@@ -1,8 +1,7 @@
 import dotenv from 'dotenv';
-import path from 'path';
 
 // Load env variables
-dotenv.config({ path: path.join(__dirname, '../../.env') });
+dotenv.config({ path: '.env' });
 
 export const config = {
   env: process.env.NODE_ENV || 'development',
@@ -11,7 +10,7 @@ export const config = {
     url: process.env.DATABASE_URL || '',
   },
   redis: {
-    url: process.env.REDIS_URL || 'redis://localhost:6379',
+    url: process.env.REDIS_URL || '',
   },
   jwt: {
     secret: process.env.JWT_SECRET || 'jwt-secret',
