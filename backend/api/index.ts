@@ -1,26 +1,33 @@
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import app from '../src/app';
 import { connectDb } from '../src/utils/prisma';
 
-let bootstrapped = false;
+let isInitialized = false;
 
-export default async function handler(req: any, res: any) {
+async function bootstrap() {
+  if (isInitialized) return;
+
+  console.log('[BOOTSTRAP] Connecting database...');
+
+  await connectDb();
+
+  console.log('[BOOTSTRAP] Database connected');
+
+  isInitialized = true;
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
-    if (!bootstrapped) {
-      console.log('Connecting database...');
-      await connectDb();
-
-      bootstrapped = true;
-      console.log('Bootstrap success');
-    }
+    await bootstrap();
 
     return app(req, res);
-  } catch (err: any) {
-    console.error('BOOTSTRAP ERROR:', err);
+  } catch (error: any) {
+    console.error('[BOOTSTRAP ERROR]', error);
 
     return res.status(500).json({
       success: false,
-      message: err?.message,
-      stack: process.env.NODE_ENV !== 'production' ? err?.stack : undefined,
+      message: error?.message ?? 'Internal Server Error',
+      stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined,
     });
   }
 }
