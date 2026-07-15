@@ -1,31 +1,26 @@
 import app from '../src/app';
 import { connectDb } from '../src/utils/prisma';
-// import { ensureRedisConnection } from '../src/utils/redis';
 
-let bootstrapPromise: Promise<void> | null = null;
+let bootstrapped = false;
 
-const bootstrap = async (): Promise<void> => {
-  if (!bootstrapPromise) {
-    bootstrapPromise = (async () => {
+export default async function handler(req: any, res: any) {
+  try {
+    if (!bootstrapped) {
+      console.log('Connecting database...');
       await connectDb();
-      // await ensureRedisConnection();
-    })().catch((error) => {
-      bootstrapPromise = null;
-      throw error;
+
+      bootstrapped = true;
+      console.log('Bootstrap success');
+    }
+
+    return app(req, res);
+  } catch (err: any) {
+    console.error('BOOTSTRAP ERROR:', err);
+
+    return res.status(500).json({
+      success: false,
+      message: err?.message,
+      stack: process.env.NODE_ENV !== 'production' ? err?.stack : undefined,
     });
   }
-
-  await bootstrapPromise;
-};
-
-export default async function handler(req: any, res: any): Promise<void> {
-  await bootstrap();
-
-  await new Promise<void>((resolve, reject) => {
-    res.on('finish', resolve);
-    res.on('close', resolve);
-    res.on('error', reject);
-
-    app(req, res);
-  });
 }
