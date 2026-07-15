@@ -314,7 +314,15 @@ Pastikan perubahan terbaru sudah ada di repository GitHub Anda.
 3. Pilih repository `counseling-ai`
 4. Saat konfigurasi project, isi:
    - `Root Directory`: `backend`
-   - `Build Command`: `npm run vercel-build`
+   - `Framework Preset`: `Other`
+   - `Build Command`: kosongkan atau biarkan default
+   - `Output Directory`: kosongkan
+
+Catatan penting:
+
+- backend ini **bukan** project Vite
+- file [backend/vercel.json](D:/projects/counseling-ai/backend/vercel.json:1) sudah memaksa Vercel memakai serverless function `api/index.ts`
+- jika dashboard Vercel masih menyimpan `Output Directory=dist`, hapus nilai itu
 
 ### Langkah 3. Tambahkan environment variables backend
 
