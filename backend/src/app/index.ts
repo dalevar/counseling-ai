@@ -15,7 +15,7 @@ import journalRouter from '../routes/journal.routes';
 import notificationRouter from '../routes/notification.routes';
 import adminRouter from '../routes/admin.routes';
 import { prisma } from '../utils/prisma';
-import { redisClient } from '../utils/redis';
+import { ensureRedisConnection, isRedisEnabled, redisClient } from '../utils/redis';
 
 const app: Application = express();
 
@@ -62,12 +62,19 @@ app.get('/api-docs', (_req: Request, res: Response) => {
 // Health Check Route — with DB & Redis probe
 app.get('/health', async (_req: Request, res: Response) => {
   let dbStatus = 'healthy';
-  let redisStatus = 'healthy';
+  let redisStatus = isRedisEnabled() ? 'healthy' : 'disabled';
 
   try { await prisma.$queryRaw`SELECT 1`; } catch { dbStatus = 'unhealthy'; }
-  try { await redisClient.ping(); } catch { redisStatus = 'unhealthy'; }
+  if (isRedisEnabled()) {
+    try {
+      await ensureRedisConnection();
+      await redisClient.ping();
+    } catch {
+      redisStatus = 'unhealthy';
+    }
+  }
 
-  const isHealthy = dbStatus === 'healthy' && redisStatus === 'healthy';
+  const isHealthy = dbStatus === 'healthy' && redisStatus !== 'unhealthy';
   const status = isHealthy ? 200 : 503;
 
   sendResponse(res, status, isHealthy ? 'EduCouns AI Backend is healthy!' : 'Service degraded', {

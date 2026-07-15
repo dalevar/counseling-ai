@@ -102,8 +102,8 @@ export const Login: React.FC = () => {
           Selamat Datang{" "}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Masuk ke akun EduCouns AI Anda. Tidak perlu memilih peran — sistem
-          kami mengenali identitas Anda secara otomatis.
+          Masuk ke akun Generasi Emas Care Anda. Tidak perlu memilih peran —
+          sistem kami mengenali identitas Anda secara otomatis.
         </p>
       </div>
 

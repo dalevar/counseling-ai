@@ -23,7 +23,7 @@ copy .env.example .env    # Windows
 cp .env.example .env      # macOS/Linux
 
 # 4. Edit .env sesuai kebutuhan
-# VITE_API_URL=http://localhost:5000/api
+# VITE_API_URL=http://localhost:5000/api/v1
 
 # 5. Jalankan development server
 npm run dev
@@ -84,8 +84,7 @@ src/
 ## 🔑 Environment Variables
 
 ```env
-VITE_API_URL=http://localhost:5000/api
-VITE_SOCKET_URL=http://localhost:5000
+VITE_API_URL=http://localhost:5000/api/v1
 VITE_APP_NAME=EduCouns AI
 ```
 
@@ -97,10 +96,16 @@ VITE_APP_NAME=EduCouns AI
 # Build production
 npm run build
 
-# Output ada di dist/ — deploy ke Vercel/Netlify/VPS/Docker
+# Output ada di dist/ — deploy ke Vercel
 ```
 
-Lihat [**Dokumentasi Lengkap**](./docs/FRONTEND_DOCUMENTATION.md) untuk panduan deployment lengkap termasuk Vercel, Netlify, Nginx, Docker, dan GitHub Actions CI/CD.
+Untuk deployment monorepo ini di Vercel:
+
+- project frontend gunakan root directory `frontend`
+- set `VITE_API_URL=https://your-backend-project.vercel.app/api/v1`
+- file [frontend/vercel.json](D:/projects/counseling-ai/frontend/vercel.json:1) sudah menambahkan rewrite untuk React Router SPA
+
+Lihat [**Dokumentasi Lengkap**](./docs/FRONTEND_DOCUMENTATION.md) dan [DEPLOYMENT_GUIDE.md](D:/projects/counseling-ai/DEPLOYMENT_GUIDE.md:1) untuk panduan Supabase + Vercel yang lebih lengkap.
 
 ---
 

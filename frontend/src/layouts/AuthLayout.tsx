@@ -133,7 +133,9 @@ const AuthLayout: React.FC = () => {
             EC
           </div>
           <div>
-            <p className="font-black text-base leading-none">EduCouns AI</p>
+            <p className="font-black text-base leading-none">
+              Generasi Emas Care
+            </p>
             <p className="text-[10px] text-muted-foreground">
               E-Counseling Platform
             </p>
@@ -148,8 +150,8 @@ const AuthLayout: React.FC = () => {
 
         <div className="px-6 pb-6 text-center">
           <p className="text-[11px] text-muted-foreground/60">
-            © {new Date().getFullYear()} EduCouns AI · Semua data dilindungi dan
-            dienkripsi.
+            © {new Date().getFullYear()} Generasi Emas Care · Semua data
+            dilindungi dan dienkripsi.
           </p>
         </div>
       </div>
