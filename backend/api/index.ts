@@ -1,6 +1,6 @@
 import app from '../src/app';
 import { connectDb } from '../src/utils/prisma';
-import { ensureRedisConnection } from '../src/utils/redis';
+// import { ensureRedisConnection } from '../src/utils/redis';
 
 let bootstrapPromise: Promise<void> | null = null;
 
@@ -8,7 +8,7 @@ const bootstrap = async (): Promise<void> => {
   if (!bootstrapPromise) {
     bootstrapPromise = (async () => {
       await connectDb();
-      await ensureRedisConnection();
+      // await ensureRedisConnection();
     })().catch((error) => {
       bootstrapPromise = null;
       throw error;
