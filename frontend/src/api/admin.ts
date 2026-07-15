@@ -3,7 +3,7 @@
  *
  * All endpoints require authentication (ADMIN or TEACHER role for create).
  * Base URL from apiClient already includes /api prefix.
- * Backend routes: /admin/*
+ * Backend routes: /v1/admin/*
  */
 import { apiClient } from "./client";
 
@@ -96,7 +96,7 @@ export const adminApi = {
   /** Get dashboard statistics */
   getStats: () =>
     apiClient
-      .get<{ data: AdminStats }>("/admin/stats")
+      .get<{ data: AdminStats }>("/v1/admin/stats")
       .then((r) => r.data.data),
 
   /** Get paginated user list */
@@ -108,25 +108,25 @@ export const adminApi = {
     status?: string;
   }) =>
     apiClient
-      .get<{ data: AdminUser[]; meta: any }>("/admin/users", { params })
+      .get<{ data: AdminUser[]; meta: any }>("/v1/admin/users", { params })
       .then((r) => r.data),
 
   /** Create a new user account (Admin/Teacher only) */
   createUser: (payload: CreateUserPayload) =>
     apiClient
-      .post<{ data: CreateUserResponse }>("/admin/users", payload)
+      .post<{ data: CreateUserResponse }>("/v1/admin/users", payload)
       .then((r) => r.data.data),
 
   /** Get schools visible to current user */
   getSchools: () =>
     apiClient
-      .get<{ data: SchoolOption[] }>("/admin/schools")
+      .get<{ data: SchoolOption[] }>("/v1/admin/schools")
       .then((r) => r.data.data),
 
   /** Register a school (Admin only) */
   createSchool: (payload: CreateSchoolPayload) =>
     apiClient
-      .post<{ data: SchoolOption }>("/admin/schools", payload)
+      .post<{ data: SchoolOption }>("/v1/admin/schools", payload)
       .then((r) => r.data.data),
 
   /** Import students from spreadsheet (Admin/Teacher) */
@@ -139,7 +139,7 @@ export const adminApi = {
 
     return apiClient
       .post<{ data: ImportStudentsResponse }>(
-        "/admin/students/import",
+        "/v1/admin/students/import",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -151,10 +151,10 @@ export const adminApi = {
   /** Update user status (ACTIVE | SUSPENDED | PENDING) */
   updateUserStatus: (userId: string, status: string) =>
     apiClient
-      .patch(`/admin/users/${userId}/status`, { status })
+      .patch(`/v1/admin/users/${userId}/status`, { status })
       .then((r) => r.data),
 
   /** Delete user account */
   deleteUser: (userId: string) =>
-    apiClient.delete(`/admin/users/${userId}`).then((r) => r.data),
+    apiClient.delete(`/v1/admin/users/${userId}`).then((r) => r.data),
 };
