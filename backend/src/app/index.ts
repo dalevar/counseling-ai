@@ -31,7 +31,7 @@ app.use(
   cors({
     origin: config.cors.origin,
     credentials: true,
-  })
+  }),
 );
 
 // Apply global API rate limiter
@@ -54,6 +54,15 @@ app.use('/api/v1/journals', journalRouter);
 app.use('/api/v1/notifications', notificationRouter);
 app.use('/api/v1/admin', adminRouter);
 
+app.get('/', (_req: Request, res: Response) => {
+  return sendResponse(res, 200, 'EduCouns AI Backend Running', {
+    name: 'EduCouns AI',
+    version: '1.0.0',
+    environment: config.env,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Swagger Docs Route
 app.get('/api-docs', (_req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, '../docs/swagger.json'));
@@ -64,7 +73,11 @@ app.get('/health', async (_req: Request, res: Response) => {
   let dbStatus = 'healthy';
   let redisStatus = isRedisEnabled() ? 'healthy' : 'disabled';
 
-  try { await prisma.$queryRaw`SELECT 1`; } catch { dbStatus = 'unhealthy'; }
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+  } catch {
+    dbStatus = 'unhealthy';
+  }
   if (isRedisEnabled()) {
     try {
       await ensureRedisConnection();
