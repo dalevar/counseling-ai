@@ -98,6 +98,16 @@ app.get('/', (_req: Request, res: Response) => {
   });
 });
 
+app.all('/api/test', (req, res) => {
+  console.log('Test endpoint hit:', req.method, req.originalUrl);
+
+  res.json({
+    success: true,
+    method: req.method,
+    url: req.originalUrl,
+  });
+});
+
 /* ==========================================================
    API ROOT
 ========================================================== */
